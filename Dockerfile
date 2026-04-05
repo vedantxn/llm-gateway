@@ -6,9 +6,9 @@ RUN groupadd --system --gid 1001 appuser && \
     useradd --system --uid 1001 --gid appuser appuser
 
 COPY pyproject.toml .
-RUN pip install --no-cache-dir .
-
 COPY app/ ./app/
+
+RUN pip install --no-cache-dir .
 
 USER appuser
 

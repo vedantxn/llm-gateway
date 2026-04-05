@@ -11,6 +11,7 @@ class Settings:
         self.environment: str = _env("ENVIRONMENT", "development")
         self.max_prompt_length: int = 1000
         self.redis_url: str = _env("REDIS_URL", "redis://localhost:6379/0")
+        self.mock_processing_delay_ms: int = int(_env("MOCK_PROCESSING_DELAY_MS", "50"))
 
 
 settings = Settings()

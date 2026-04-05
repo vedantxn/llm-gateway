@@ -1,13 +1,33 @@
+x-app-base: &app-base
+  build: .
+  environment:
+    - REDIS_URL=redis://redis:6379/0
+  depends_on:
+    - redis
+  restart: unless-stopped
+
 services:
   app:
-    build: .
+    <<: *app-base
     ports:
-      - "8000:8000"
-    environment:
-      - REDIS_URL=redis://redis:6379/0
+      - "8001:8000"
+
+  app1:
+    <<: *app-base
+
+  app2:
+    <<: *app-base
+
+  nginx:
+    image: nginx:1.27-alpine
     depends_on:
-      - redis
+      - app1
+      - app2
+    ports:
+      - "8000:80"
     restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
 
   redis:
     image: redis:7-alpine
