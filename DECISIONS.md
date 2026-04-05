@@ -76,8 +76,6 @@ Reason:
 - visual and easy to demo
 - enough for incident response proof
 
-Setup can happen later in the project when alerting is implemented.
-
 ## Decision 9: Quest Prioritization
 
 Priority order:
@@ -94,7 +92,7 @@ Reason:
 
 ## Decision 10: Keep The Product Surface Small
 
-Allowed early endpoints:
+Allowed endpoints:
 
 - `GET /health`
 - `POST /generate`
@@ -104,3 +102,36 @@ Reason:
 
 - every extra endpoint increases implementation, test, and demo complexity
 - a smaller system is easier to make look solid
+
+## Decision 11: Two App Instances Behind Nginx
+
+Reason:
+
+- proves horizontal scaling without overcomplicating the demo
+- easy to show in `docker ps` output
+- Nginx distributes requests visibly via `X-Served-By` header
+
+## Decision 12: Prometheus + Grafana + Alertmanager Stack
+
+Reason:
+
+- industry-standard observability stack
+- Grafana auto-provisions dashboards via provisioning files
+- Alertmanager supports Discord webhooks for live demo proof
+- Prometheus natively scrapes our `/metrics` endpoint
+
+## Decision 13: Structured JSON Logging
+
+Reason:
+
+- machines can parse and aggregate JSON logs
+- required for incident response quest
+- makes log analysis possible without SSH
+
+## Decision 14: Simulated Processing Delay on Cache Miss
+
+Reason:
+
+- creates a realistic performance gap between cache miss and hit
+- makes the caching story measurable and demoable
+- configurable via `MOCK_PROCESSING_DELAY_MS` environment variable
