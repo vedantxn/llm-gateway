@@ -2,22 +2,26 @@
 
 Production-style AI gateway service for the Production Engineering hackathon.
 
-## Phase 1
+## Quick Start
 
-Phase 1 provides:
+### Local Development
 
-- `GET /health`
-- `POST /generate`
-- `GET /metrics`
-- request validation
-- clean JSON errors
-- deterministic mocked inference
+1. Install dependencies with `pip install -e .`.
+2. Start the server with `uvicorn app.main:app --reload`.
 
-## Run Locally
+### Docker Compose
 
-1. Create a virtual environment.
-2. Install dependencies with `pip install -e .`.
-3. Start the server with `uvicorn app.main:app --reload`.
+```bash
+docker compose up --build
+```
+
+This starts the app and Redis together. The app will automatically connect to Redis for caching.
+
+## Endpoints
+
+- `GET /health` — liveness check
+- `POST /generate` — process a prompt request
+- `GET /metrics` — Prometheus-format metrics
 
 ## Example Requests
 
@@ -33,4 +37,11 @@ Generate request:
 curl -X POST http://localhost:8000/generate \
   -H "Content-Type: application/json" \
   -d '{"prompt":"Summarize this text"}'
+```
+
+## Testing
+
+```bash
+pip install -e ".[test]"
+pytest --cov --cov-report=term-missing
 ```
