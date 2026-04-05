@@ -2,10 +2,14 @@
 
 import re
 
-from app.services.inference import InferenceResult, generate_output
+from app.services.inference import InferenceResult, generate_output, new_request_id
 
 
 class TestGenerateOutput:
+    def test_new_request_id_format(self):
+        request_id = new_request_id()
+        assert re.fullmatch(r"req_[0-9a-f]{8}", request_id)
+
     def test_returns_inference_result(self):
         result = generate_output("test prompt")
         assert isinstance(result, InferenceResult)

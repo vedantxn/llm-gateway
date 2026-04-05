@@ -49,25 +49,23 @@
       },
       {
         "id": 5,
-        "title": "Service Uptime",
-        "type": "singlestat",
-        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+        "title": "CPU Percent",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
         "targets": [
-          {"expr": "llm_gateway_uptime_seconds", "legendFormat": "uptime"}
+          {"expr": "llm_gateway_process_cpu_percent", "legendFormat": "cpu %"}
         ],
-        "format": "s"
+        "yAxes": [{"label": "%", "min": 0}]
       },
       {
         "id": 6,
-        "title": "Service Up",
-        "type": "singlestat",
-        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
         "targets": [
-          {"expr": "llm_gateway_up", "legendFormat": "up"}
+          {"expr": "llm_gateway_process_memory_bytes", "legendFormat": "memory bytes"}
         ],
-        "colorBackground": true,
-        "thresholds": "0,1",
-        "colors": ["#bf1b00", "#299c46"]
+        "yAxes": [{"label": "bytes", "min": 0}]
       }
     ],
     "time": {"from": "now-5m", "to": "now"},

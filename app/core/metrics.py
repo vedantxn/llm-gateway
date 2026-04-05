@@ -1,5 +1,7 @@
 """Prometheus-compatible metrics registry."""
 
+import os
+import resource
 import time
 from collections import defaultdict
 from threading import Lock
@@ -14,7 +16,18 @@ class MetricsRegistry:
         self._cache_hits: int = 0
         self._cache_misses: int = 0
         self._latency_sum: float = 0.0
+        self._active_requests: int = 0
         self._latency_by_endpoint: dict[str, list[float]] = defaultdict(list)
+        self._last_cpu_time = time.process_time()
+        self._last_wall_time = time.time()
+
+    def inc_active_requests(self) -> None:
+        with self._lock:
+            self._active_requests += 1
+
+    def dec_active_requests(self) -> None:
+        with self._lock:
+            self._active_requests = max(0, self._active_requests - 1)
 
     def inc_request(self, endpoint: str, latency_s: float, is_error: bool, cache_hit: bool | None = None) -> None:
         with self._lock:
@@ -30,8 +43,21 @@ class MetricsRegistry:
 
     def render(self) -> str:
         with self._lock:
-            uptime = time.time() - self._start_time
+            now = time.time()
+            uptime = now - self._start_time
             avg_latency = (self._latency_sum / self._request_count * 1000) if self._request_count else 0
+            cpu_time = time.process_time()
+            wall_delta = max(now - self._last_wall_time, 0.001)
+            cpu_delta = max(cpu_time - self._last_cpu_time, 0.0)
+            cpu_percent = (cpu_delta / wall_delta) * 100
+            self._last_cpu_time = cpu_time
+            self._last_wall_time = now
+
+            memory_bytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            if os.name != "posix":
+                memory_bytes = int(memory_bytes)
+            else:
+                memory_bytes = int(memory_bytes * 1024)
 
             lines = [
                 f"# HELP llm_gateway_up Whether the service is running",
@@ -61,6 +87,18 @@ class MetricsRegistry:
                 f"# HELP llm_gateway_request_latency_ms_avg Average request latency",
                 f"# TYPE llm_gateway_request_latency_ms_avg gauge",
                 f"llm_gateway_request_latency_ms_avg {avg_latency:.2f}",
+                f"",
+                f"# HELP llm_gateway_active_requests Current in-flight requests",
+                f"# TYPE llm_gateway_active_requests gauge",
+                f"llm_gateway_active_requests {self._active_requests}",
+                f"",
+                f"# HELP llm_gateway_process_memory_bytes Resident memory usage",
+                f"# TYPE llm_gateway_process_memory_bytes gauge",
+                f"llm_gateway_process_memory_bytes {memory_bytes}",
+                f"",
+                f"# HELP llm_gateway_process_cpu_percent Process CPU percent",
+                f"# TYPE llm_gateway_process_cpu_percent gauge",
+                f"llm_gateway_process_cpu_percent {cpu_percent:.2f}",
                 f"",
             ]
 

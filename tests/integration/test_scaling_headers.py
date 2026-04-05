@@ -19,7 +19,7 @@ async def test_generate_sets_cache_hit_header_when_cached_response_exists(client
     monkeypatch.setattr(
         routes,
         "cache_get",
-        lambda _: {"id": "req_cached1", "output": "cached output"},
+        lambda _: {"output": "cached output"},
     )
     monkeypatch.setattr(routes, "generate_output", lambda _: (_ for _ in ()).throw(AssertionError("cache miss path should not run")))
 
@@ -28,8 +28,7 @@ async def test_generate_sets_cache_hit_header_when_cached_response_exists(client
     assert response.status_code == 200
     assert response.headers["x-cache"] == "HIT"
     assert response.headers["x-served-by"]
-    assert response.json() == {
-        "id": "req_cached1",
-        "output": "cached output",
-        "cached": True,
-    }
+    assert response.headers["x-request-id"].startswith("req_")
+    assert response.json()["id"] == response.headers["x-request-id"]
+    assert response.json()["output"] == "cached output"
+    assert response.json()["cached"] is True

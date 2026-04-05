@@ -20,25 +20,29 @@ def create_app() -> FastAPI:
     @app.middleware("http")
     async def track_metrics(request, call_next):
         start = time.time()
-        response = await call_next(request)
-        latency_s = time.time() - start
+        registry.inc_active_requests()
+        try:
+            response = await call_next(request)
+            latency_s = time.time() - start
 
-        is_error = response.status_code >= 400
-        cache_hit = None
-        cache_header = response.headers.get("x-cache")
-        if cache_header == "HIT":
-            cache_hit = True
-        elif cache_header == "MISS":
-            cache_hit = False
+            is_error = response.status_code >= 400
+            cache_hit = None
+            cache_header = response.headers.get("x-cache")
+            if cache_header == "HIT":
+                cache_hit = True
+            elif cache_header == "MISS":
+                cache_hit = False
 
-        registry.inc_request(
-            endpoint=request.url.path,
-            latency_s=latency_s,
-            is_error=is_error,
-            cache_hit=cache_hit,
-        )
+            registry.inc_request(
+                endpoint=request.url.path,
+                latency_s=latency_s,
+                is_error=is_error,
+                cache_hit=cache_hit,
+            )
 
-        return response
+            return response
+        finally:
+            registry.dec_active_requests()
 
     @app.get("/metrics")
     def metrics():

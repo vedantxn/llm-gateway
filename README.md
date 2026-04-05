@@ -83,3 +83,9 @@ docker run --rm -i \
 - Prometheus: `http://localhost:9090`
 - Alertmanager: `http://localhost:9093`
 - Runbook: [`RUNBOOK.md`](RUNBOOK.md)
+
+## Configuration And Operations
+
+- Config reference: [`CONFIG.md`](CONFIG.md)
+- Failure modes: [`FAILURE_MODES.md`](FAILURE_MODES.md)
+- Incident diagnosis example: [`INCIDENT_EXAMPLE.md`](INCIDENT_EXAMPLE.md)

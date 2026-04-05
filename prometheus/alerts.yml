@@ -2,8 +2,8 @@ groups:
   - name: gateway
     rules:
       - alert: ServiceDown
-        expr: llm_gateway_up == 0
-        for: 1m
+        expr: up{job="llm-gateway"} == 0
+        for: 15s
         labels:
           severity: critical
         annotations:
@@ -11,10 +11,19 @@ groups:
           description: "Instance {{ $labels.instance }} has been down for more than 1 minute."
 
       - alert: HighErrorRate
-        expr: rate(llm_gateway_errors_total[1m]) > 0.1
-        for: 1m
+        expr: rate(llm_gateway_errors_total[1m]) / clamp_min(rate(llm_gateway_requests_total[1m]), 0.001) > 0.05
+        for: 15s
         labels:
           severity: warning
         annotations:
           summary: "High error rate detected"
-          description: "Error rate is above 0.1/s for the last minute."
+          description: "Error rate exceeded 5 percent for the last minute."
+
+      - alert: HighLatency
+        expr: llm_gateway_request_latency_ms_avg > 500
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency detected"
+          description: "Average request latency is above 500ms."

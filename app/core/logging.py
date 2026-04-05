@@ -3,13 +3,21 @@
 import json
 import logging
 import time
-from typing import Callable
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 
 logger = logging.getLogger("llm-gateway")
+
+
+def emit_log(level: str, **fields: object) -> None:
+    payload = {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "level": level,
+        **fields,
+    }
+    logger.log(getattr(logging, level, logging.INFO), json.dumps(payload, default=str))
 
 
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):
@@ -21,15 +29,15 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         cache_header = response.headers.get("x-cache")
         cache_status = cache_header.lower() if cache_header else "n/a"
 
-        logger.info(
-            json.dumps({
-                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "method": request.method,
-                "path": request.url.path,
-                "status_code": response.status_code,
-                "latency_ms": round(latency_ms, 2),
-                "cache": cache_status,
-            })
+        emit_log(
+            "INFO",
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            latency_ms=round(latency_ms, 2),
+            cache=cache_status,
+            request_id=response.headers.get("x-request-id"),
+            served_by=response.headers.get("x-served-by"),
         )
 
         return response

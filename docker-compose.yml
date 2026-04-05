@@ -37,6 +37,8 @@ services:
     image: prom/prometheus:latest
     ports:
       - "9090:9090"
+    depends_on:
+      - alertmanager
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
@@ -49,8 +51,15 @@ services:
     image: prom/alertmanager:latest
     ports:
       - "9093:9093"
+    depends_on:
+      - alert-relay
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    restart: unless-stopped
+
+  alert-relay:
+    build: .
+    command: ["uvicorn", "relay.main:app", "--host", "0.0.0.0", "--port", "8010"]
     environment:
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
     restart: unless-stopped

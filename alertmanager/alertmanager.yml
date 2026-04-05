@@ -1,14 +1,14 @@
 receivers:
   - name: "discord"
-    discord_configs:
-      - webhook_url: "${DISCORD_WEBHOOK_URL}"
+    webhook_configs:
+      - url: "http://alert-relay:8010/alert"
         send_resolved: true
 
 route:
   receiver: "discord"
   group_by: ["alertname"]
-  group_wait: 10s
-  group_interval: 30s
+  group_wait: 5s
+  group_interval: 15s
   repeat_interval: 5m
 
 inhibit_rules:

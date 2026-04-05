@@ -35,6 +35,8 @@ async def test_metrics_contains_expected_text(client):
 
     assert "llm_gateway_up" in text
     assert 'service="llm-gateway"' in text
+    assert "llm_gateway_process_memory_bytes" in text
+    assert "llm_gateway_process_cpu_percent" in text
 
 
 @pytest.mark.anyio

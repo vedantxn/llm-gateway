@@ -46,6 +46,26 @@ async def test_generate_trims_whitespace(client):
     assert "  padded prompt  " not in body["output"]
 
 
+@pytest.mark.anyio
+async def test_generate_repeated_request_returns_fresh_request_id(client, monkeypatch):
+    from app.api import routes
+
+    cache_state: dict[str, dict] = {}
+
+    monkeypatch.setattr(routes, "cache_get", lambda key: cache_state.get(key))
+    monkeypatch.setattr(routes, "cache_set", lambda key, value: cache_state.__setitem__(key, value))
+
+    first = await client.post("/generate", json={"prompt": "repeat me"})
+    second = await client.post("/generate", json={"prompt": "repeat me"})
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json()["cached"] is False
+    assert second.json()["cached"] is True
+    assert first.json()["output"] == second.json()["output"]
+    assert first.json()["id"] != second.json()["id"]
+
+
 # --- Validation failures ---
 
 
@@ -98,3 +118,15 @@ async def test_generate_oversized_prompt(client):
     body = response.json()
     assert body["error"]["code"] == "invalid_request"
     assert "1000" in body["error"]["message"]
+
+
+@pytest.mark.anyio
+async def test_generate_invalid_json_body_returns_clean_error(client):
+    response = await client.post(
+        "/generate",
+        content='{"prompt":',
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_request"
