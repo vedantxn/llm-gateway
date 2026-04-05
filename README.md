@@ -4,24 +4,29 @@ Production-style AI gateway service for the Production Engineering hackathon.
 
 ## Quick Start
 
-### Local Development
-
-1. Install dependencies with `pip install -e .`.
-2. Start the server with `uvicorn app.main:app --reload`.
-
 ### Docker Compose
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
-This starts:
+This starts the full stack:
 
-- `app` on `http://localhost:8001` for direct baseline testing
-- `app1` and `app2` behind `nginx` on `http://localhost:8000`
-- `redis` for shared caching
+| Service | Port | Purpose |
+|---------|------|---------|
+| Nginx | `8000` | Load-balanced entry point |
+| App (direct) | `8001` | Single-instance baseline testing |
+| Prometheus | `9090` | Metrics collection |
+| Grafana | `3000` | Dashboards (admin/admin) |
+| Alertmanager | `9093` | Alert routing |
+| Redis | internal | Shared cache |
 
-The app instances automatically connect to Redis for caching.
+### Local Development
+
+```bash
+pip install -e .
+uvicorn app.main:app --reload
+```
 
 ## Endpoints
 
@@ -31,23 +36,13 @@ The app instances automatically connect to Redis for caching.
 
 ## Example Requests
 
-Health check:
-
 ```bash
 curl http://localhost:8000/health
-```
 
-Generate request:
-
-```bash
 curl -X POST http://localhost:8000/generate \
   -H "Content-Type: application/json" \
   -d '{"prompt":"Summarize this text"}'
-```
 
-Inspect cache and load-balancing headers:
-
-```bash
 curl -i -X POST http://localhost:8000/generate \
   -H "Content-Type: application/json" \
   -d '{"prompt":"repeat me"}'
@@ -62,19 +57,19 @@ pytest --cov --cov-report=term-missing
 
 ## Load Testing
 
-Baseline against the direct single app instance:
-
 ```bash
 docker run --rm -i \
   --network llm-gateway_default \
   -e BASE_URL=http://app:8000 \
   -v "$PWD/load-tests:/scripts" \
   grafana/k6 run /scripts/baseline.js
-```
 
-Cached load against the scaled Nginx entrypoint:
+docker run --rm -i \
+  --network llm-gateway_default \
+  -e BASE_URL=http://nginx \
+  -v "$PWD/load-tests:/scripts" \
+  grafana/k6 run /scripts/scale.js
 
-```bash
 docker run --rm -i \
   --network llm-gateway_default \
   -e BASE_URL=http://nginx \
@@ -82,14 +77,9 @@ docker run --rm -i \
   grafana/k6 run /scripts/cache.js
 ```
 
-Scaled uncached load against the Nginx entrypoint:
+## Observability
 
-```bash
-docker run --rm -i \
-  --network llm-gateway_default \
-  -e BASE_URL=http://nginx \
-  -v "$PWD/load-tests:/scripts" \
-  grafana/k6 run /scripts/scale.js
-```
-
-Override target, VUs, or duration with environment variables such as `BASE_URL`, `VUS`, and `DURATION`.
+- Grafana dashboard: `http://localhost:3000`
+- Prometheus: `http://localhost:9090`
+- Alertmanager: `http://localhost:9093`
+- Runbook: [`RUNBOOK.md`](RUNBOOK.md)

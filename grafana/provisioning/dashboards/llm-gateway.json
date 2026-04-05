@@ -1,0 +1,79 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "llm-gateway",
+    "title": "LLM Gateway — Golden Signals",
+    "tags": ["production-engineering"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {"expr": "rate(llm_gateway_requests_total[1m])", "legendFormat": "req/s"}
+        ],
+        "yAxes": [{"label": "req/s", "min": 0}]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {"expr": "rate(llm_gateway_errors_total[1m])", "legendFormat": "errors/s"}
+        ],
+        "yAxes": [{"label": "errors/s", "min": 0}]
+      },
+      {
+        "id": 3,
+        "title": "Average Latency (ms)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {"expr": "llm_gateway_request_latency_ms_avg", "legendFormat": "avg latency"}
+        ],
+        "yAxes": [{"label": "ms", "min": 0}]
+      },
+      {
+        "id": 4,
+        "title": "Cache Hits vs Misses",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {"expr": "rate(llm_gateway_cache_hits_total[1m])", "legendFormat": "cache hits/s"},
+          {"expr": "rate(llm_gateway_cache_misses_total[1m])", "legendFormat": "cache misses/s"}
+        ],
+        "yAxes": [{"label": "ops/s", "min": 0}]
+      },
+      {
+        "id": 5,
+        "title": "Service Uptime",
+        "type": "singlestat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+        "targets": [
+          {"expr": "llm_gateway_uptime_seconds", "legendFormat": "uptime"}
+        ],
+        "format": "s"
+      },
+      {
+        "id": 6,
+        "title": "Service Up",
+        "type": "singlestat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+        "targets": [
+          {"expr": "llm_gateway_up", "legendFormat": "up"}
+        ],
+        "colorBackground": true,
+        "thresholds": "0,1",
+        "colors": ["#bf1b00", "#299c46"]
+      }
+    ],
+    "time": {"from": "now-5m", "to": "now"},
+    "refresh": "5s",
+    "schemaVersion": 30,
+    "version": 1
+  },
+  "overwrite": true
+}

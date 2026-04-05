@@ -2,7 +2,6 @@ import hashlib
 import socket
 
 from fastapi import APIRouter, Response
-from fastapi.responses import PlainTextResponse
 
 from app.schemas.generate import GenerateRequest, GenerateResponse, HealthResponse
 from app.services.cache import cache_get, cache_set
@@ -39,8 +38,3 @@ def generate(request: GenerateRequest, response: Response) -> GenerateResponse:
         output=result.output,
         cached=False,
     )
-
-
-@router.get("/metrics", response_class=PlainTextResponse)
-def metrics() -> str:
-    return 'llm_gateway_up{service="llm-gateway"} 1\n'
